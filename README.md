@@ -1,6 +1,6 @@
 # palette
 
-An application written on Rust which gets an image's palette and export results as a web page.
+An application written on Rust that gets a color palette as a beautiful web page!
 
 ![image](palette_examples.jpg)
 
@@ -12,10 +12,13 @@ An application written on Rust which gets an image's palette and export results 
 
 **Result:** exports *index.html* in the directory with your image.
 
+## Image Exporting
+Depends on which algorithm you choose, application can export a quantized image. (If you use **"Common Pixels with a dictionary"** algorithm, it will sort pixels in descending order).
+
 ## Commands
 
 ```
-palette 0.1.0
+palette 0.1.1
 
 USAGE:
     palette.exe [OPTIONS] --src <SRC>
@@ -23,9 +26,13 @@ USAGE:
 OPTIONS:
     -c, --colors <COLORS>    Number of shades you want to get [default: 8]
     -h, --help               Print help information
-        --no-export          Doesn't export palette web page
-    -o, --out <OUT>          Export an image (e.g --out assets/new_img.jpg) [default: ]
-    -s, --src <SRC>          Source image (e.g. --src assets/img.jpg)
-        --silent             Doesn't print an array of palette's shades
+        --method <METHOD>    Quantization method
+                             0. Median Cut Algorithm
+                             1. Common Pixels with a dictionary
+                                  [default: 0]
+        --no-export          Don't export a web page
+    -o, --out <OUT>          Export an image (e.g assets/new_img.jpg) [default: ]
+    -s, --src <SRC>          Source image (e.g. assets/img.jpg)
+        --silent             Don't print an array of palette's shades
     -V, --version            Print version information
 ```

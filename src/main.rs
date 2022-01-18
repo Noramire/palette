@@ -1,30 +1,38 @@
 use image::{self, GenericImageView, RgbImage, DynamicImage};
-use palette::{MedianCut, Quantization};
 use clap::Parser;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use palette::traits::Quantization;
+use palette::mediancut::MedianCut;
+use palette::meet::Meet;
 
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]
 struct Args {
-    #[clap(short, long, help = "Source image (e.g. --src assets/img.jpg)")]
+    #[clap(short, long, help = "Source image (e.g. assets/img.jpg)")]
     src: String,
 
     #[clap(short, long, default_value = "8", help = "Number of shades you want to get")]
     colors: usize,
 
-    #[clap(long = "no-export", help = "Doesn't export palette web page")]
+    #[clap(long = "no-export", help = "Don't export a web page")]
     no_export: bool,
 
-    #[clap(short, long, default_value = "", help = "Export an image (e.g --out assets/new_img.jpg)")]
+    #[clap(short, long, default_value = "", help = "Export an image (e.g assets/new_img.jpg)")]
     out: String,
 
-    #[clap(long, help = "Doesn't print an array of palette's shades")]
-    silent: bool
+    #[clap(long, help = "Don't print an array of palette's shades")]
+    silent: bool,
+
+    #[clap(long, default_value = "0", help = "Quantization method
+0. Median Cut Algorithm
+1. Common Pixels with a dictionary
+    ")]
+    method: usize
 }
 
-pub fn export_html(colors: &Vec<String>, path_image: String) {
+pub fn export_html(colors: &[String], path_image: String) {
     let path = Path::new(path_image.as_str());
     let image_name = path.file_name().unwrap().to_str().unwrap();
     
@@ -58,10 +66,19 @@ fn main() {
     let buffer = img.to_rgb8();
 
     let space: Vec<[u8; 3]> = buffer.pixels()
-        .map(|&pixel| [pixel[0], pixel[1], pixel[2]])
+        .map(|pixel| pixel.0)
         .collect();
 
-    let mut quantization = MedianCut::new(&space, args.colors);
+    let quantization: Option<Box<dyn Quantization>> = match args.method {
+        0 => Some(Box::new(MedianCut::new(space, args.colors))),
+        1 => Some(Box::new(Meet::new(space, args.colors))),
+        _ => None
+    };
+
+    let mut quantization = quantization.expect(
+        format!("\"{}\" is a wrong method!", args.method).as_str()
+    );
+
     quantization.build();
     let palette = quantization.get_palette();
 
@@ -74,6 +91,6 @@ fn main() {
     }
 
     if !args.out.is_empty() {
-        export_quantization(width, height, quantization.to_buffer(), args.out.clone());
+        export_quantization(width, height, quantization.to_buffer(), args.out);
     }
 }
